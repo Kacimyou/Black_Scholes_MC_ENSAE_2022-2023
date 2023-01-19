@@ -269,6 +269,85 @@ public:
     }
 };
 
+class LookbackOption : public Option
+{
+private:
+    double n;
+    double dt;
+
+public:
+    // Constructor
+    LookbackOption(double S, double K, double r, double sigma, double T, int n) :
+        Option(S, K, r, sigma, T), n(n) {dt = T/n; }
+
+    // Getter methods
+    double getn() {return n;}
+    double getdt() {return dt;}
+
+    // Setter methods
+    void setn(double n) { this->n = n; }
+    void setdt(double dt) { this->dt = dt; }
+};
+
+class LookbackPut : public LookbackOption
+{
+public:
+    // Constructor
+    LookbackPut(double S, double K, double r, double sigma, double T, int n) :
+        LookbackOption(S, K, r, sigma, T, n) {}
+
+    // Function to price a lookback put option using Monte Carlo methods
+    double price(int num_simulations) {
+        double sum = 0;
+        double S_t;
+        double payoff;
+        for (int i = 0; i < num_simulations; i++) {
+            S_t = getS();
+            double Min_S = getS();
+            double Max_S = getS();
+            for (int j = 0; j < getn(); j++) {
+                S_t = S_t * exp((getR() - 0.5 * getSigma() * getSigma()) * getdt() + getSigma() * rand_normal());
+                Min_S = std::min(Min_S, S_t);
+                Max_S = std::max(Max_S, S_t);
+            }
+            payoff = std::max(Max_S - S_t, 0.0);
+            sum += payoff;
+        }
+        return (sum / num_simulations) * exp(-getR() * getT());
+    }
+};
+
+
+class LookbackCall : public LookbackOption
+{
+public:
+    // Constructor
+    LookbackCall(double S, double K, double r, double sigma, double T, int n) :
+        LookbackOption(S, K, r, sigma, T, n) {}
+
+    // Function to price a lookback call option using Monte Carlo methods
+    double price(int num_simulations) {
+        double sum = 0;
+        double S_t;
+        double payoff;
+        for (int i = 0; i < num_simulations; i++) {
+            S_t = getS();
+            double Min_S = getS();
+            double Max_S = getS();
+            for (int j = 0; j < getn(); j++) {
+                S_t = S_t * exp((getR() - 0.5 * getSigma() * getSigma()) * getdt() + getSigma() * rand_normal());
+                Min_S = std::min(Min_S, S_t);
+                Max_S = std::max(Max_S, S_t);
+            }
+            payoff = std::max(S_t - Min_S, 0.0);
+            sum += payoff;
+        }
+        return (sum / num_simulations) * exp(-getR() * getT());
+    }
+};
+
+
+
 
 
 
@@ -325,6 +404,16 @@ int main()
     AsianPut asianput(S,K,r,sigma,T,n);
     double asian_put_price = asianput.price(num_sim);
     std::cout << "Price of Asian put option: " << asian_put_price << std::endl;
+
+
+    LookbackCall lookbackcall(S,K,r,sigma,T,n);
+    double lookbackcall_price = lookbackcall.price(num_sim);
+    std::cout << "Price of Lookback call option: " << lookbackcall_price << std::endl;
+
+    LookbackPut lookbackput(S,K,r,sigma,T,n);
+    double lookbackput_price = lookbackput.price(num_sim);
+    std::cout << "Price of Lookback put option: " << lookbackput_price << std::endl;
+
 
 
     return 0;
