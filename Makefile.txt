@@ -1,0 +1,11 @@
+all: main.o OptionPricing.o
+    g++ main.o OptionPricing.o -o main
+
+main.o: main.cpp
+    g++ -c main.cpp
+
+OptionPricing.o: OptionPricing.cpp
+    g++ -c OptionPricing.cpp
+
+clean:
+    rm -f *.o main

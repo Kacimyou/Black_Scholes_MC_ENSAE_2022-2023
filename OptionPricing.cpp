@@ -1,3 +1,11 @@
+/*
+	Paul Wattellier, Mira Maamari, Denisa Draghian, Kacim Younsi
+	27/01/2022
+	Assignment C++ - End of term Project
+	OptionPricing.cpp
+*/
+
+
 #include <cmath>
 #include <math.h>
 #include <iostream>
@@ -334,17 +342,6 @@ double LookbackCall::price(int num_simulations) {
         return (sum / num_simulations) * exp(-getR() * getT());
     }
 
-
-
-
-
-
-
-
-
-
-
-
 int main()
 {
     double S = 100;      // Current price of the underlying asset
@@ -393,4 +390,3 @@ int main()
 
     return 0;
 }
-

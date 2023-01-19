@@ -1,7 +1,11 @@
+/*
+	Paul Wattellier, Mira Maamari, Denisa Draghian, Kacim Younsi
+	27/01/2022
+	Assignment C++ - End of term Project
+	OptionPricing.h
+*/
 
 #define OptionPricing_h
-
-
 #include <cmath>
 #include <math.h>
 #include <iostream>
@@ -11,6 +15,7 @@
 //*********************
 //*********************
 //	Option Parent Class
+
 //*********************
 //*********************
 
