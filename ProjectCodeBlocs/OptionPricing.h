@@ -65,12 +65,24 @@ public:
     double rho();
 };
 
+//**********************************
+//	European Option
+//**********************************
+
+class EuropeanOption: public Option
+{
+public:
+    // Constructor
+    EuropeanOption(double S, double K, double r, double sigma, double T);
+        ~EuropeanOption();
+
+    };
 
 //**********************************
 //	European Call
 //**********************************
 
-class EuropeanCall : public Option
+class EuropeanCall : public EuropeanOption
 {
 public:
     // Constructor
@@ -87,7 +99,7 @@ public:
 //**********************************
 //	European Put
 //**********************************
-class EuropeanPut : public Option
+class EuropeanPut : public EuropeanOption
 {
 public:
     // Constructor
@@ -115,21 +127,19 @@ private:
     double v0; // Initial volatility
     double k; // Mean reversion speed of volatility
     double theta; // Long-term mean of volatility
-    double rho; // Correlation between asset and volatility
-    double sigma; // Volatility of volatility
+    double sigma_v; // Volatility of volatility
     double n;
     double dt;
 
 public:
     // Constructor
-    StochasticEuropeanOption(double S, double K, double r, double v0, double k, double theta, double rho, double sigma, double T);
+    StochasticEuropeanOption(double S, double K, double r, double v0, double k, double theta, double sigma_v, double T);
         ~StochasticEuropeanOption();
 
     // Getter methods
     double getV0();
     double getK();
     double getTheta();
-    double getRho();
     double getSigma();
     double getn();
     double getdt();
@@ -137,8 +147,7 @@ public:
     void setV0(double v0);
     void setK(double k);
     void setTheta(double theta) ;
-    void setRho(double rho);
-    void setSigma(double sigma);
+    void setSigma(double sigma_v);
     void setn(double n);
 
 };
@@ -151,7 +160,7 @@ class StochasticEuropeanCall : public StochasticEuropeanOption
 {
 public:
     // Constructor
-    StochasticEuropeanCall(double S, double K, double r, double v0, double k, double theta, double rho, double sigma, double T);
+    StochasticEuropeanCall(double S, double K, double r, double v0, double k, double theta, double sigma_v, double T);
         ~StochasticEuropeanCall();
 
 
@@ -167,7 +176,7 @@ class StochasticEuropeanPut : public StochasticEuropeanOption
 {
 public:
     // Constructor
-    StochasticEuropeanPut(double S, double K, double r, double v0, double k, double theta, double rho, double sigma, double T);
+    StochasticEuropeanPut(double S, double K, double r, double v0, double k, double theta, double sigma_v, double T);
         ~StochasticEuropeanPut();
 
     // Function to price a European put option with stochastic volatility
@@ -188,7 +197,6 @@ class AsianOption : public Option
 private:
     int n;  // Number of time steps
     double dt; // Time step size
-    double payoff; // Payoff of the option
 public:
     // Constructor
     AsianOption(double S, double K, double r, double sigma, double T, int n);

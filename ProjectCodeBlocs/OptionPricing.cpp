@@ -75,6 +75,13 @@ double Option::rho() { return K * T * exp(-r * T) * norm_cdf(d2()); }
 
 
 //**********************************
+//	European Option
+//**********************************
+
+EuropeanOption::EuropeanOption(double S, double K, double r, double sigma, double T) :
+    Option(S, K, r, sigma, T) {}
+EuropeanOption::~EuropeanOption() {}
+//**********************************
 //	European Call
 //**********************************
 
@@ -82,7 +89,7 @@ double Option::rho() { return K * T * exp(-r * T) * norm_cdf(d2()); }
 
 // Constructor
 EuropeanCall::EuropeanCall(double S, double K, double r, double sigma, double T) :
-    Option(S, K, r, sigma, T) {}
+    EuropeanOption(S, K, r, sigma, T) {}
 EuropeanCall::~EuropeanCall() {}
 // Price a European call option
 double EuropeanCall::price() { return getS() * norm_cdf(d1()) - getK() * exp(-getR() * getT()) * norm_cdf(d2()); }
@@ -101,7 +108,7 @@ void EuropeanCall::replicate() {
 
 // Constructor
 EuropeanPut::EuropeanPut(double S, double K, double r, double sigma, double T) :
-        Option(S, K, r, sigma, T) {}
+        EuropeanOption(S, K, r, sigma, T) {}
 EuropeanPut::~EuropeanPut() {}
 // Price a European put option
 double EuropeanPut::price() { return getK() * exp(-getR() * getT()) * norm_cdf(-d2()) - getS() * norm_cdf(-d1()); }
@@ -118,15 +125,14 @@ void EuropeanPut::replicate() {
 //*******************************************
 
 
-StochasticEuropeanOption::StochasticEuropeanOption(double S, double K, double r, double v0, double k, double theta, double rho, double sigma, double T) :
-        Option(S, K, r, 0, T), v0(v0), k(k), theta(theta), rho(rho), sigma(sigma), n(n) {dt = T/n;}
+StochasticEuropeanOption::StochasticEuropeanOption(double S, double K, double r, double v0, double k, double theta,double sigma_v, double T) :
+        Option(S, K, r, 0, T), v0(v0), k(k), theta(theta), sigma_v(sigma_v), n(n) {dt = T/n;}
 StochasticEuropeanOption::~StochasticEuropeanOption() {}
 // Getter methods
 double StochasticEuropeanOption::getV0() { return v0; }
 double StochasticEuropeanOption::getK() { return k; }
 double StochasticEuropeanOption::getTheta() { return theta; }
-double StochasticEuropeanOption::getRho() { return rho; }
-double StochasticEuropeanOption::getSigma() { return sigma; }
+double StochasticEuropeanOption::getSigma() { return sigma_v; }
 double StochasticEuropeanOption::getn() { return n; }
 double StochasticEuropeanOption::getdt() { return dt; }
 
@@ -134,8 +140,7 @@ double StochasticEuropeanOption::getdt() { return dt; }
 void StochasticEuropeanOption::setV0(double v0) { this->v0 = v0; }
 void StochasticEuropeanOption::setK(double k) { this->k = k; }
 void StochasticEuropeanOption::setTheta(double theta) { this->theta = theta; }
-void StochasticEuropeanOption::setRho(double rho) { this->rho = rho; }
-void StochasticEuropeanOption::setSigma(double sigma) { this->sigma = sigma; }
+void StochasticEuropeanOption::setSigma(double sigma_v) { this->sigma_v = sigma_v; }
 void StochasticEuropeanOption::setn(double n) { this->n = n; }
 
 
@@ -144,8 +149,8 @@ void StochasticEuropeanOption::setn(double n) { this->n = n; }
 //**********************************
 
 // Constructor
-StochasticEuropeanCall::StochasticEuropeanCall(double S, double K, double r, double v0, double k, double theta, double rho, double sigma, double T) :
-    StochasticEuropeanOption(S, K, r, v0, k, theta, rho, sigma, T) {}
+StochasticEuropeanCall::StochasticEuropeanCall(double S, double K, double r, double v0, double k, double theta, double sigma, double T) :
+    StochasticEuropeanOption(S, K, r, v0, k, theta, sigma, T) {}
 StochasticEuropeanCall::~StochasticEuropeanCall() {}
 // Function to price a European call option with stochastic volatility
 double StochasticEuropeanCall::price(int num_simulations) {
@@ -171,8 +176,8 @@ double StochasticEuropeanCall::price(int num_simulations) {
 //**********************************
 
 // Constructor
-StochasticEuropeanPut::StochasticEuropeanPut(double S, double K, double r, double v0, double k, double theta, double rho, double sigma, double T) :
-    StochasticEuropeanOption(S, K, r, v0, k, theta, rho, sigma, T) {}
+StochasticEuropeanPut::StochasticEuropeanPut(double S, double K, double r, double v0, double k, double theta, double sigma, double T) :
+    StochasticEuropeanOption(S, K, r, v0, k, theta, sigma, T) {}
 
 StochasticEuropeanPut::~StochasticEuropeanPut() {}
 
