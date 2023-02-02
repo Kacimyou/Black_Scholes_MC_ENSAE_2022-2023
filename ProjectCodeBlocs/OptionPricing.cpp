@@ -110,7 +110,7 @@ double EuropeanCall::price_MonteCarlo(int num_simulations) {
             S_t = getS();
 
             for (int j = 0; j < 12; j++) {
-                S_t = S_t * exp((getR() - 0.5 * getSigma() * getSigma()) * getT()/12 + getSigma() * sqrt(getT()/12) * gaussian_box_muller());
+                S_t = S_t * exp((getR() - 0.5 * getSigma() * getSigma()) * (getT()/12) + getSigma() * sqrt(getT()/12) * gaussian_box_muller());
 
             }
             payoff = std::max(S_t - getK(), 0.0);
@@ -155,7 +155,7 @@ double EuropeanPut::price_MonteCarlo(int num_simulations) {
             S_t = getS();
 
             for (int j = 0; j < 12; j++) {
-                S_t = S_t * exp((getR() - 0.5 * getSigma() * getSigma()) * getT()/12 + getSigma() * sqrt(getT()/12) * gaussian_box_muller());
+                S_t = S_t * exp((getR() - 0.5 * getSigma() * getSigma()) * (getT()/12) + getSigma() * sqrt(getT()/12) * gaussian_box_muller());
 
             }
             payoff = std::max(-S_t + getK(), 0.0);
@@ -559,7 +559,7 @@ double BinaryPut::price(int num_simulations) {
 
 // Constructor
 GapCall::GapCall(double S, double K, double r, double sigma, double T, double K1) :
-    Option(S, K, r, sigma, T) {}
+    Option(S, K, r, sigma, T), K1(K1) {}
 GapCall::~GapCall() {}
 
 //Getter methods
@@ -576,7 +576,7 @@ double GapCall::price()
 
 // Constructor
 GapPut::GapPut(double S, double K, double r, double sigma, double T, double K1) :
-    Option(S, K, r, sigma, T) {}
+    Option(S, K, r, sigma, T), K1(K1) {}
 GapPut::~GapPut() {}
 
 //Getter methods
@@ -595,7 +595,7 @@ double GapPut::price() { return getK1()*exp(-getR()*getT())*norm_cdf(-d2())-getS
 
 // Constructor
 ChooserOption::ChooserOption(double S, double K, double r, double sigma, double T, double T1) :
-    Option(S, K, r, sigma, T) {}
+    Option(S, K, r, sigma, T), T1(T1) {}
 ChooserOption::~ChooserOption() {}
 
 // Getter methods
