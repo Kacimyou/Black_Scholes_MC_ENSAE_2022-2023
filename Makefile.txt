@@ -1,11 +1,16 @@
-all: main.o OptionPricing.o
-    g++ main.o OptionPricing.o -o main
+CC = g++
+CFLAGS = -Wall -std=c++11
 
-main.o: main.cpp
-    g++ -c main.cpp
+all: main
 
-OptionPricing.o: OptionPricing.cpp
-    g++ -c OptionPricing.cpp
+main: main.o OptionPricing.o
+	$(CC) $(CFLAGS) main.o OptionPricing.o -o main
+
+main.o: main.cpp OptionPricing.h
+	$(CC) $(CFLAGS) -c main.cpp
+
+OptionPricing.o: OptionPricing.cpp OptionPricing.h
+	$(CC) $(CFLAGS) -c OptionPricing.cpp
 
 clean:
-    rm -f *.o main
+	rm -f main.o OptionPricing.o main

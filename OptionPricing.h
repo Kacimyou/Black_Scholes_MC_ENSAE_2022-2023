@@ -1,5 +1,5 @@
 /*
-	Paul Wattellier, Mira Maamari, Denisa Draghian, Kacim Younsi
+	Paul Wattellier, Mira Maamari, Denisa Draghia, Kacim Younsi
 	27/01/2022
 	Assignment C++ - End of term Project
 	OptionPricing.h
@@ -10,7 +10,8 @@
 #include <math.h>
 #include <iostream>
 #include <random>
-
+#include <vector>
+#include <cstdlib>
 
 //*********************
 //*********************
@@ -19,10 +20,9 @@
 //*********************
 //*********************
 
-
 class Option
 {
-private:
+protected:
     double S;      // Current price of the underlying asset
     double K;      // Strike price
     double r;      // Risk-free interest rate
@@ -51,7 +51,10 @@ public:
     // Calculate d1 and d2
     double d1();
     double d2();
-
+    
+    
+    // The Greeks
+    
     // Function to calculate the delta of the option
     double delta();
     // Function to calculate the gamma of the option
@@ -76,11 +79,19 @@ public:
     EuropeanCall(double S, double K, double r, double sigma, double T);
         ~EuropeanCall();
 
-    // Price a European call option
+    // Price a European call option using BS formula
     double price();
+    
+    // Price a European put option using Monte Carlo simulation
+    double price_MonteCarlo(int);
+
+    //Price difference between the BS price and the Monte Carlo one for n simulations
+    double difference(int);
+
 
     // Replication strategy
     void replicate();
+    
     };
 
 //**********************************
@@ -93,8 +104,14 @@ public:
     EuropeanPut(double S, double K, double r, double sigma, double T);
         ~EuropeanPut();
 
-    // Price a European put option
+    // Price a European put option using BS formula
     double price();
+    
+    // Price a European put option using Monte Carlo simulation
+    double price_MonteCarlo(int);
+    
+    //Price difference between the BS price and the Monte Carlo one for n simulations
+    double difference(int);
 
     // Replication strategy
     void replicate();
@@ -184,7 +201,7 @@ public:
 
 class AsianOption : public Option
 {
-private:
+protected:
     int n;  // Number of time steps
     double dt; // Time step size
     double payoff; // Payoff of the option
@@ -192,6 +209,7 @@ public:
     // Constructor
     AsianOption(double S, double K, double r, double sigma, double T, int n);
         ~AsianOption();
+    // Getter methods
     double getn();
     double getdt();
 };
@@ -235,7 +253,7 @@ public:
 
 class LookbackOption : public Option
 {
-private:
+protected:
     double n;
     double dt;
 
@@ -282,3 +300,194 @@ public:
 
 };
 
+
+//**********************************
+//**********************************
+//	Binary Option
+//**********************************
+//**********************************
+
+
+
+class BinaryOption : public Option
+{
+protected:
+    int n;  // Number of time steps
+    double dt; // Time step size
+    double payoff; // Payoff of the option
+public:
+    // Constructor
+    BinaryOption(double S, double K, double r, double sigma, double T, int n);
+        ~BinaryOption();
+    // Getter methods
+    double getn();
+    double getdt();
+};
+
+//**********************************
+//	Binary Call Option
+//**********************************
+
+class BinaryCall : public BinaryOption
+{
+public:
+    // Constructor
+    BinaryCall(double S, double K, double r, double sigma, double T, int n);
+    ~BinaryCall();
+    // Function to price a Binary call option using Monte Carlo methods
+    double price(int num_simulations);
+};
+
+//**********************************
+//	Binary Put Option
+//**********************************
+
+class BinaryPut : public BinaryOption
+{
+public:
+    // Constructor
+    BinaryPut(double S, double K, double r, double sigma, double T, int n);
+    ~BinaryPut();
+    // Function to price an Binary put option using Monte Carlo methods
+    double price(int num_simulations);
+};
+
+//**********************************
+//**********************************
+//	Gap Option
+//**********************************
+//**********************************
+
+// A gap call option is a European call option that pays off S_t-K1 when S_t>K2. 
+//Its price is the price of a European Call priced using BS formula + (K2-K1)*exp (-r*T)*N(d2)
+
+
+//**********************************
+//	Gap Call Option
+//**********************************
+class GapCall : public Option
+{private:
+    double K1;
+public:
+    // Constructor
+    GapCall(double S, double K, double r, double sigma, double T, double K1);
+        ~GapCall();
+    // Function to price an Gap call option
+    double price();
+    //Getter methods
+    double getK1();
+    };
+
+//**********************************
+//	Gap Put Option
+//**********************************
+
+// The price of a Gas Put Option is K1*exp(-r*T)*N(-d2)-S_T* N(-d1)
+class GapPut : public Option
+{private:
+    double K1;
+public:
+    // Constructor
+    GapPut(double S, double K, double r, double sigma, double T, double K1);
+        ~GapPut();
+    // Function to price an Gap call option
+    double price();
+    //Getter methods
+    double getK1();
+    };
+    
+//**********************************
+//**********************************
+//	Chooser Option
+//**********************************
+//**********************************
+    
+//The option allows to decide, at a predefined time T1, whether to exercice a call or a put
+    
+class ChooserOption : public Option
+{
+private:
+    double T1; 
+public:
+    // Constructor
+    ChooserOption(double S, double K, double r, double sigma, double T,double T1);
+        ~ChooserOption();
+    // Getter methods
+    double getT1();
+    // Function to price an Chooser option
+    double price();
+};
+
+//**********************************
+//**********************************
+//	Barrier Option
+//**********************************
+//**********************************
+
+
+
+class BarrierOption : public Option
+{
+protected:
+    int type;// type=1 if the option is knock-in and type=0 if the option is knock-out
+    double n;
+    double dt;
+    double barrier; // the value of the barrier
+public:
+    // Constructor
+    BarrierOption(double S, double K, double r, double sigma, double T,double n,int type,double barrier);
+        ~BarrierOption();
+    int getType();
+    double getbarrier();
+    double getn();
+    double getdt();
+
+    // Setter methods
+    void setn(double n);
+    void setdt(double dt);
+    void settype(int type);
+    void setbarrier(double);
+};
+
+
+//**********************************
+//	Barrier Call Option
+//**********************************
+class BarrierCall: public BarrierOption
+{private:
+int type_call_1; // type_call_1=1 if the option is UP-and- and 
+//type_call_1=0 if the option is DOWN-and-
+
+public:
+//Constructor
+BarrierCall(double S, double K, double r, double sigma, double T, double n, int type, double barrier, int type_call_1);
+~BarrierCall();
+
+//Function to price Barrier Call Option using Monte Carlo simulation
+double price(int num_simulations);
+
+//Getter methods 
+int getType1();
+
+};
+
+//**********************************
+//	Barrier Put Option
+//**********************************
+class BarrierPut: public BarrierOption
+{private:
+int type_put_1; // type_put_1=1 if the option is UP-and- and 
+//type_put_1=0 if the option is DOWN-and-
+
+public:
+//Constructor
+BarrierPut(double S, double K, double r, double sigma, double T, double n, int type, double barrier, int type_call_1);
+~BarrierPut();
+
+//Function to price Barrier Put Option using Monte Carlo simulation
+double price(int num_simulations);
+
+//Getter methods 
+int getType1();
+
+};

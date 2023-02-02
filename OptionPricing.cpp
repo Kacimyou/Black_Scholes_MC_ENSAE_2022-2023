@@ -1,5 +1,5 @@
 /*
-	Paul Wattellier, Mira Maamari, Denisa Draghian, Kacim Younsi
+	Paul Wattellier, Mira Maamari, Denisa Draghia, Kacim Younsi
 	27/01/2022
 	Assignment C++ - End of term Project
 	OptionPricing.cpp
@@ -10,16 +10,29 @@
 #include <math.h>
 #include <iostream>
 #include <random>
+#include <stdio.h>
+#include <vector>
+#include <assert.h>
 std::default_random_engine generator;
 std::normal_distribution<double> distribution(0.0,1.0);
 #include "OptionPricing.h"
 
+double PI=3.14159265359;
+//Box-Muller algorithm to generate random gaussian numbers
+double gaussian_box_muller() 
+{
+  double U1=((double)rand()/(double)RAND_MAX);
+  double U2=((double)rand()/(double)RAND_MAX);
+  double n=sqrt(-2*log(U1))*cos(2*U2*PI);
+  
+
+  return n;};
 
 
 double norm_cdf(double x) { return 0.5 * (1.0 + erf(x / sqrt(2.0))); }
 
 double norm_pdf(double x) {
-    return (1.0 / sqrt(2 * M_PI)) * exp(-0.5 * x * x);
+    return (1.0 / sqrt(2 * PI)) * exp(-0.5 * x * x);
 }
 
 double rand_normal() {
@@ -83,8 +96,33 @@ double Option::rho() { return K * T * exp(-r * T) * norm_cdf(d2()); }
 EuropeanCall::EuropeanCall(double S, double K, double r, double sigma, double T) :
     Option(S, K, r, sigma, T) {}
 EuropeanCall::~EuropeanCall() {}
-// Price a European call option
+
+// Price a European call option by BS formula
 double EuropeanCall::price() { return getS() * norm_cdf(d1()) - getK() * exp(-getR() * getT()) * norm_cdf(d2()); }
+
+//Price a European call option by Monte Carlo Simulation
+
+double EuropeanCall::price_MonteCarlo(int num_simulations) {
+        double sum = 0;
+        double S_t;
+        double payoff;
+        for (int i = 0; i < num_simulations; i++) {
+            S_t = getS();
+
+            for (int j = 0; j < 12; j++) {
+                S_t = S_t * exp((getR() - 0.5 * getSigma() * getSigma()) * getT()/12 + getSigma() * sqrt(getT()/12) * gaussian_box_muller());
+                
+            }
+            payoff = std::max(S_t - getK(), 0.0);
+            sum += payoff;
+        }
+        return (sum / num_simulations) * exp(-getR() * getT());
+    }
+
+double EuropeanCall::difference(int num_simulations){
+   
+    return abs(price()-price_MonteCarlo(num_simulations));};
+
 
 // Replication strategy
 void EuropeanCall::replicate() {
@@ -101,9 +139,35 @@ void EuropeanCall::replicate() {
 // Constructor
 EuropeanPut::EuropeanPut(double S, double K, double r, double sigma, double T) :
         Option(S, K, r, sigma, T) {}
+        
 EuropeanPut::~EuropeanPut() {}
 // Price a European put option
 double EuropeanPut::price() { return getK() * exp(-getR() * getT()) * norm_cdf(-d2()) - getS() * norm_cdf(-d1()); }
+
+//Price a European call option by Monte Carlo Simulation
+
+double EuropeanPut::price_MonteCarlo(int num_simulations) {
+        double sum = 0;
+        double S_t;
+        
+        double payoff;
+        for (int i = 0; i < num_simulations; i++) {
+            S_t = getS();
+            
+            for (int j = 0; j < 12; j++) {
+                S_t = S_t * exp((getR() - 0.5 * getSigma() * getSigma()) * getT()/12 + getSigma() * sqrt(getT()/12) * gaussian_box_muller());
+                
+            }
+            payoff = std::max(-S_t + getK(), 0.0);
+            sum += payoff;
+        }
+        return (sum / num_simulations) * exp(-getR() * getT());
+    }
+
+double EuropeanPut::difference(int num_simulations){
+    return abs(price()-price_MonteCarlo(num_simulations));};
+
+
 
 void EuropeanPut::replicate() {
     double num_shares = -norm_cdf(-d1()); // Number of shares of the underlying asset
@@ -156,8 +220,8 @@ double StochasticEuropeanCall::price(int num_simulations) {
             S_t = getS();
             v_t = getV0();
             for (int j = 0; j < getn(); j++) {
-                S_t = S_t * exp((getR() - 0.5 * v_t) * getdt() + sqrt(v_t) * rand_normal());
-                v_t = v_t + getK() * (getTheta() - v_t) * getdt() + getSigma() * rand_normal();
+                S_t = S_t * exp((getR() - 0.5 * v_t) * getdt() + sqrt(v_t) * gaussian_box_muller());
+                v_t = v_t + getK() * (getTheta() - v_t) * getdt() + getSigma() * gaussian_box_muller();
             }
             payoff = std::max(S_t - getK(), 0.0);
             sum += payoff;
@@ -185,8 +249,8 @@ double StochasticEuropeanPut::price(int num_simulations) {
             S_t = getS();
             v_t = getV0();
             for (int j = 0; j < getn(); j++) {
-                S_t = S_t * exp((getR() - 0.5 * v_t) * getdt() + sqrt(v_t) * rand_normal());
-                v_t = v_t + getK() * (getTheta() - v_t) * getdt() + getSigma() * rand_normal();
+                S_t = S_t * exp((getR() - 0.5 * v_t) * getdt() + sqrt(v_t) * gaussian_box_muller());
+                v_t = v_t + getK() * (getTheta() - v_t) * getdt() + getSigma() * gaussian_box_muller();
             }
             payoff = std::max(getK() - S_t, 0.0);
             sum += payoff;
@@ -228,7 +292,7 @@ double AsianCall::price(int num_simulations) {
             S_t = getS();
             average = 0;
             for (int j = 0; j < getn(); j++) {
-                S_t = S_t * exp((getR() - 0.5 * getSigma() * getSigma()) * getdt() + getSigma() * sqrt(getdt()) * rand_normal());
+                S_t = S_t * exp((getR() - 0.5 * getSigma() * getSigma()) * getdt() + getSigma() * sqrt(getdt()) * gaussian_box_muller());
                 average += S_t;
             }
             average /= getn();
@@ -256,7 +320,7 @@ double AsianPut::price(int num_simulations) {
             S_t = getS();
             average = 0;
             for (int j = 0; j < getn(); j++) {
-                S_t = S_t * exp((getR() - 0.5 * getSigma() * getSigma()) * getdt() + getSigma() * sqrt(getdt()) * rand_normal());
+                S_t = S_t * exp((getR() - 0.5 * getSigma() * getSigma()) * getdt() + getSigma() * sqrt(getdt()) * gaussian_box_muller());
                 average += S_t;
             }
             average /= getn();
@@ -303,7 +367,7 @@ double LookbackPut::price(int num_simulations) {
             double Min_S = getS();
             double Max_S = getS();
             for (int j = 0; j < getn(); j++) {
-                S_t = S_t * exp((getR() - 0.5 * getSigma() * getSigma()) * getdt() + getSigma() * rand_normal());
+                S_t = S_t * exp((getR() - 0.5 * getSigma() * getSigma()) * getdt() + getSigma() * gaussian_box_muller());
                 Min_S = std::min(Min_S, S_t);
                 Max_S = std::max(Max_S, S_t);
             }
@@ -322,6 +386,7 @@ double LookbackPut::price(int num_simulations) {
 LookbackCall::LookbackCall(double S, double K, double r, double sigma, double T, int n) :
     LookbackOption(S, K, r, sigma, T, n) {}
 
+
 // Function to price a lookback call option using Monte Carlo methods
 double LookbackCall::price(int num_simulations) {
         double sum = 0;
@@ -332,7 +397,7 @@ double LookbackCall::price(int num_simulations) {
             double Min_S = getS();
             double Max_S = getS();
             for (int j = 0; j < getn(); j++) {
-                S_t = S_t * exp((getR() - 0.5 * getSigma() * getSigma()) * getdt() + getSigma() * rand_normal());
+                S_t = S_t * exp((getR() - 0.5 * getSigma() * getSigma()) * getdt() + getSigma() * gaussian_box_muller());
                 Min_S = std::min(Min_S, S_t);
                 Max_S = std::max(Max_S, S_t);
             }
@@ -341,52 +406,401 @@ double LookbackCall::price(int num_simulations) {
         }
         return (sum / num_simulations) * exp(-getR() * getT());
     }
-
-int main()
-{
-    double S = 100;      // Current price of the underlying asset
-    double K = 110;      // Strike price
-    double r = 0.05;     // Risk-free interest rate
-    double sigma = 0.2;  // Volatility of the underlying asset
-    double T = 1;        // Time to expiration (in years)
-    int n = 12;
-    int num_sim = 6000;
-
-    // Create an European call option object
-    EuropeanCall call(S, K, r, sigma, T);
-    // Calculate the price of the call option
-    double call_price = call.price();
-    std::cout << "Price of European call option: " << call_price << std::endl;
-
-    // Create an European put option object
-    EuropeanPut put(S, K, r, sigma, T);
-    // Calculate the price of the put option
-    double put_price = put.price();
-    std::cout << "Price of European put option: " << put_price << std::endl;
-
-    call.replicate();
-
-    double delta_call = call.delta();
-    std::cout << "Delta of European Call option: " << delta_call << std::endl;
-
-    AsianCall asiancall(S,K,r,sigma,T,n);
-    double asian_call_price = asiancall.price(num_sim);
-    std::cout << "Price of Asian call option: " << asian_call_price << std::endl;
-
-    AsianPut asianput(S,K,r,sigma,T,n);
-    double asian_put_price = asianput.price(num_sim);
-    std::cout << "Price of Asian put option: " << asian_put_price << std::endl;
+    
+//**********************************
+//**********************************
+//	Binary Option
+//**********************************
+//**********************************
 
 
-    LookbackCall lookbackcall(S,K,r,sigma,T,n);
-    double lookbackcall_price = lookbackcall.price(num_sim);
-    std::cout << "Price of Lookback call option: " << lookbackcall_price << std::endl;
+//Function Heaviside that return 1 if its argument is positive and 0 otherwise
 
-    LookbackPut lookbackput(S,K,r,sigma,T,n);
-    double lookbackput_price = lookbackput.price(num_sim);
-    std::cout << "Price of Lookback put option: " << lookbackput_price << std::endl;
-
-
-
-    return 0;
+double heaviside(const double& x) {
+  if (x >= 0) {
+      return 1.0;
+  } else {
+    return 0.0;
+  }
 }
+
+//Constructor
+BinaryOption::BinaryOption(double S, double K, double r, double sigma, double T, int n) :
+        Option(S, K, r, sigma, T), n(n) {
+            dt = T / n;}
+BinaryOption::~BinaryOption() {}
+
+//Getter methods
+double BinaryOption::getn() { return n; }
+double BinaryOption::getdt() { return dt; }
+
+
+
+//**********************************
+//	Binary Call Option
+//**********************************
+
+// Constructor
+BinaryCall::BinaryCall(double S, double K, double r, double sigma, double T, int n) :
+    BinaryOption(S, K, r, sigma, T, n) {}
+BinaryCall::~BinaryCall() {}
+
+// Function to price an Binary call option using Monte Carlo methods
+double BinaryCall::price(int num_simulations) {
+    double sum = 0;
+    double S_t; 
+    double payoff;
+    for (int i = 0; i < num_simulations; i++) {
+        S_t = getS();
+        for (int j = 0; j < 12; j++) {
+            S_t = S_t * exp((getR()-0.5 *getSigma() * getSigma())* getT()/12+getSigma()*sqrt(getT()/12) * gaussian_box_muller());
+            }
+        
+            payoff = heaviside(S_t - getK());
+            sum += payoff;
+        }
+        return (sum / num_simulations) * exp(-getR() * getT());
+    } 
+
+
+//**********************************
+//	Binary Put Option
+//**********************************
+
+// Constructor
+BinaryPut::BinaryPut(double S, double K, double r, double sigma, double T, int n) :
+    BinaryOption(S, K, r, sigma, T, n) {}
+BinaryPut::~BinaryPut() {}
+
+// Function to price an Binary call option using Monte Carlo methods
+double BinaryPut::price(int num_simulations) {
+        double sum = 0;
+        double S_t; 
+        double payoff;
+        for (int i = 0; i < num_simulations; i++) {
+            S_t = getS();
+            
+            for (int j = 0; j < 12; j++) {
+                S_t = S_t * exp((getR() - 0.5 * getSigma() * getSigma()) * getT()/12 + getSigma() * sqrt(getT()/12) * gaussian_box_muller());
+                
+            }
+            payoff = heaviside(-S_t + getK());
+            sum += payoff;
+        }
+        return (sum / num_simulations) * exp(-getR() * getT());
+    }
+
+
+//**********************************
+//**********************************
+//	Gap Option
+//**********************************
+//**********************************
+
+
+//**********************************
+//	Gap Call Option
+//**********************************
+
+// Constructor
+GapCall::GapCall(double S, double K, double r, double sigma, double T, double K1) :
+    Option(S, K, r, sigma, T) {}
+GapCall::~GapCall() {}
+
+//Getter methods
+double GapCall::getK1(){return K1;};
+
+//Function to price a Gap Call option
+double GapCall::price() 
+{return getS() * norm_cdf(d1()) - getK() * exp(-getR() * getT()) * norm_cdf(d2())+(getK()-getK1())*norm_cdf(d2()); };
+
+
+//**********************************
+//	Gap Put Option
+//**********************************
+
+// Constructor
+GapPut::GapPut(double S, double K, double r, double sigma, double T, double K1) :
+    Option(S, K, r, sigma, T) {}
+GapPut::~GapPut() {}
+
+//Getter methods
+double GapPut::getK1(){return K1;};
+// Function to price a Gap Put option
+double GapPut::price() { return getK1()*exp(-getR()*getT())*norm_cdf(-d2())-getS()*norm_cdf(-d1());};
+
+
+
+//**********************************
+//**********************************
+//	Chooser Option
+//**********************************
+//**********************************
+
+
+// Constructor
+ChooserOption::ChooserOption(double S, double K, double r, double sigma, double T, double T1) :
+    Option(S, K, r, sigma, T) {}
+ChooserOption::~ChooserOption() {}
+
+// Getter methods
+double ChooserOption::getT1(){return T1;};
+
+// Function to price an Chooser option
+// The price of a chooser option is the price of an European Call Option with maturity of T-T1+
+//the price of an European Put option with a strike of K*exp(-r(T-T1)) and a maturity of T-T1
+
+double ChooserOption::price()
+{return EuropeanCall(getS(),getK(),getR(),getSigma(),getT()-getT1()).price()
++EuropeanPut(getS(), getK()*exp(-getR()*(getT()-getT1())),getR(),getSigma(),getT()-getT1()).price();};
+
+
+//**********************************
+//**********************************
+//	Barrier Option
+//**********************************
+//**********************************
+
+
+BarrierOption::BarrierOption(double S, double K, double r, double sigma, double T, double n, int typ, double barrie) :
+    Option(S, K, r, sigma, T), n(n), type(typ), barrier(barrie) {dt=T/n;};
+   
+BarrierOption::~BarrierOption() {}
+// Getter methods
+double BarrierOption::getn() {return n;}
+double BarrierOption::getdt() {return dt;}
+int BarrierOption::getType() {return type;}
+double BarrierOption::getbarrier() {return barrier;}
+// Setter methods
+void BarrierOption::setn(double n) { this->n = n; }
+void BarrierOption::setdt(double dt) { this->dt = dt; }
+void BarrierOption::setbarrier(double barrier) {this->barrier=barrier;}
+
+//**********************************
+//	Barrier Call Option
+//**********************************
+
+//Constructor
+BarrierCall::BarrierCall(double S, double K, double r, double sigma, double T, double n,int type,double barrier, int type_call_1) :
+    BarrierOption(S, K, r, sigma, T, n,type,barrier) {type_call_1=getType1();}
+BarrierCall::~BarrierCall(){}
+
+//Getter methods
+int BarrierCall::getType1() {return type_call_1;}
+
+
+// Function to price a barrier call option using Monte Carlo methods
+double BarrierCall::price(int num_simulations)
+{if ((getType()==1)&&(getType1()==1)) // The call is up-and-in
+{if (getbarrier()<getS()) {std::cout<<"Wrong parameters ";
+    return -1;
+}
+else {double sum=0;
+        double S_t;
+        double payoff;
+        int kick=0;
+        for (int i = 0; i < num_simulations; i++) {
+            S_t = getS();
+            
+            for (int j = 0; j < getn(); j++) {
+                S_t = S_t * exp((getR() - 0.5 * getSigma() * getSigma()) * getdt() + getSigma() * gaussian_box_muller());
+                if (S_t>getbarrier()){kick+=1;}
+            }
+            if (kick==0){payoff =0;}
+            else payoff=std::max(S_t-getK(), 0.0);
+            sum += payoff;
+        }
+        return (sum / num_simulations) * exp(-getR() * getT());
+    }}
+if ((getType()==1)&&(getType1()==0)) // The call is down-and-in
+{if (getbarrier()>getS()) {std::cout<<"Wrong parameters ";
+    return -1;
+}
+else {double sum=0;
+        double S_t;
+        double payoff;
+        int kick=0;
+        for (int i = 0; i < num_simulations; i++) {
+            S_t = getS();
+            
+            for (int j = 0; j < getn(); j++) {
+                S_t = S_t * exp((getR() - 0.5 * getSigma() * getSigma()) * getdt() + getSigma() * gaussian_box_muller());
+                if (S_t<getbarrier()){kick+=1;}
+            }
+            if (kick==0){payoff =0;}
+            else payoff=std::max(S_t-getK(), 0.0);
+            sum += payoff;
+        }
+        return (sum / num_simulations) * exp(-getR() * getT());
+    }}
+    
+if ((getType()==0)&&(getType1()==0)) // The call is down-and-out
+{if (getbarrier()>getS()) {std::cout<<"Wrong parameters ";
+    return -1;
+}
+else {double sum=0;
+        double S_t;
+        double payoff;
+        int kick=0;
+        for (int i = 0; i < num_simulations; i++) {
+            S_t = getS();
+            
+            for (int j = 0; j < getn(); j++) {
+                S_t = S_t * exp((getR() - 0.5 * getSigma() * getSigma()) * getdt() + getSigma() * gaussian_box_muller());
+                if (S_t<getbarrier()){kick+=1;}
+            }
+            if (kick==0){payoff =0;}
+            else payoff=std::max(S_t-getK(), 0.0);
+            sum += payoff;
+        }
+        return (sum / num_simulations) * exp(-getR() * getT());
+    }}
+
+if ((getType()==0)&&(getType1()==1)) // The call is up-and-out
+{if (getbarrier()<getS()) {std::cout<<"Wrong parameters ";
+    return -1;
+}
+else {double sum=0;
+        double S_t;
+        double payoff;
+        int kick=0;
+        for (int i = 0; i < num_simulations; i++) {
+            S_t = getS();
+            
+            for (int j = 0; j < getn(); j++) {
+                S_t = S_t * exp((getR() - 0.5 * getSigma() * getSigma()) * getdt() + getSigma() * gaussian_box_muller());
+                if (S_t>getbarrier()){kick+=1;}
+            }
+            if (kick>0){payoff =0;}
+            else payoff=std::max(S_t-getK(), 0.0);
+            sum += payoff;
+        }
+        return (sum / num_simulations) * exp(-getR() * getT());
+        
+    }}
+    return -1;
+};
+    
+
+
+//**********************************
+//	Barrier Put Option
+//**********************************
+
+
+//Constructor
+BarrierPut::BarrierPut(double S, double K, double r, double sigma, double T, double n,int type,double barrier, int type_call_1) :
+    BarrierOption(S, K, r, sigma, T, n,type,barrier) {type_call_1=getType1();}
+BarrierPut::~BarrierPut(){}
+
+//Getter methods
+int BarrierPut::getType1() {return type_put_1;}
+
+
+// Function to price a barrier put option using Monte Carlo methods
+double BarrierPut::price(int num_simulations)
+{
+    if ((getType()==1)&&(getType1()==1)) // The put is up-and-in
+{if (getbarrier()<getS()) {std::cout<<"Wrong parameters ";
+    return -1;
+}
+else {double sum=0;
+        double S_t;
+        double payoff;
+        int kick=0;
+        for (int i = 0; i < num_simulations; i++) {
+            S_t = getS();
+            
+            for (int j = 0; j < getn(); j++) {
+                S_t = S_t * exp((getR() - 0.5 * getSigma() * getSigma()) * getdt() + getSigma() * gaussian_box_muller());
+                if (S_t>getbarrier()){kick+=1;}
+            }
+            if (kick==0){payoff =0;}
+            else payoff=std::max(-S_t+getK(), 0.0);
+            sum += payoff;
+        }
+        return (sum / num_simulations) * exp(-getR() * getT());
+    }}
+if ((getType()==1)&&(getType1()==0)) // The put is down-and-in
+{if (getbarrier()>getS()) {std::cout<<"Wrong parameters ";
+    return -1;
+}
+else {double sum=0;
+        double S_t;
+        double payoff;
+        int kick=0;
+        for (int i = 0; i < num_simulations; i++) {
+            S_t = getS();
+            
+            for (int j = 0; j < getn(); j++) {
+                S_t = S_t * exp((getR() - 0.5 * getSigma() * getSigma()) * getdt() + getSigma() * gaussian_box_muller());
+                if (S_t<getbarrier()){kick+=1;}
+            }
+            if (kick==0){payoff =0;}
+            else payoff=std::max(-S_t+getK(), 0.0);
+            sum += payoff;
+        }
+        return (sum / num_simulations) * exp(-getR() * getT());
+    }}
+    
+if ((getType()==0)&&(getType1()==0)) // The put is down-and-out
+{if (getbarrier()>getS()) {std::cout<<"Wrong parameters ";
+    return -1;
+}
+else {double sum=0;
+        double S_t;
+        double payoff;
+        int kick=0;
+        for (int i = 0; i < num_simulations; i++) {
+            S_t = getS();
+            
+            for (int j = 0; j < getn(); j++) {
+                S_t = S_t * exp((getR() - 0.5 * getSigma() * getSigma()) * getdt() + getSigma() * gaussian_box_muller());
+                if (S_t<getbarrier()){kick+=1;}
+            }
+            if (kick==0){payoff =0;}
+            else payoff=std::max(-S_t+getK(), 0.0);
+            sum += payoff;
+        }
+        return (sum / num_simulations) * exp(-getR() * getT());
+    }}
+
+if ((getType()==0)&&(getType1()==1)) // The put is up-and-out
+{if (getbarrier()<getS()) {std::cout<<"Wrong parameters ";
+    return -1;
+}
+else {double sum=0;
+        double S_t;
+        double payoff;
+        int kick=0;
+        for (int i = 0; i < num_simulations; i++) {
+            S_t = getS();
+            
+            for (int j = 0; j < getn(); j++) {
+                S_t = S_t * exp((getR() - 0.5 * getSigma() * getSigma()) * getdt() + getSigma() * gaussian_box_muller());
+                if (S_t>getbarrier()){kick+=1;}
+            }
+            if (kick>0){payoff =0;}
+            else payoff=std::max(-S_t+getK(), 0.0);
+            sum += payoff;
+        }
+        return (sum / num_simulations) * exp(-getR() * getT());
+    }}
+    return -1;
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
