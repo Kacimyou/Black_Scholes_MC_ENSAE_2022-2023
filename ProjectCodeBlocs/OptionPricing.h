@@ -143,7 +143,7 @@ public:
 
     // Getter methods
     double getV0();
-    double getK();
+    double getk();
     double getTheta();
     double getRho();
     double getSigma();
@@ -151,7 +151,7 @@ public:
     double getdt();
     // Setter methods
     void setV0(double v0);
-    void setK(double k);
+    void setk(double k);
     void setTheta(double theta) ;
     void setRho(double rho);
     void setSigma(double sigma);

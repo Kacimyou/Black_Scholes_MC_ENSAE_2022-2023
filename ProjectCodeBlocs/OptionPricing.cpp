@@ -186,7 +186,7 @@ StochasticEuropeanOption::StochasticEuropeanOption(double S, double K, double r,
 StochasticEuropeanOption::~StochasticEuropeanOption() {}
 // Getter methods
 double StochasticEuropeanOption::getV0() { return v0; }
-double StochasticEuropeanOption::getK() { return k; }
+double StochasticEuropeanOption::getk() { return k; }
 double StochasticEuropeanOption::getTheta() { return theta; }
 double StochasticEuropeanOption::getRho() { return rho; }
 double StochasticEuropeanOption::getSigma() { return sigma; }
@@ -195,7 +195,7 @@ double StochasticEuropeanOption::getdt() { return dt; }
 
 // Setter methods
 void StochasticEuropeanOption::setV0(double v0) { this->v0 = v0; }
-void StochasticEuropeanOption::setK(double k) { this->k = k; }
+void StochasticEuropeanOption::setk(double k) { this->k = k; }
 void StochasticEuropeanOption::setTheta(double theta) { this->theta = theta; }
 void StochasticEuropeanOption::setRho(double rho) { this->rho = rho; }
 void StochasticEuropeanOption::setSigma(double sigma) { this->sigma = sigma; }
@@ -207,7 +207,7 @@ void StochasticEuropeanOption::setn(double n) { this->n = n; }
 //**********************************
 
 // Constructor
-StochasticEuropeanCall_volatility ::StochasticEuropeanCall_volatility (double S, double K, double r, double v0, double k, double theta, double rho, double sigma, double T) :
+StochasticEuropeanCall_volatility ::StochasticEuropeanCall_volatility (double S,WS double K, double r, double v0, double k, double theta, double rho, double sigma, double T) :
     StochasticEuropeanOption(S, K, r, v0, k, theta, rho, sigma, T) {}
 StochasticEuropeanCall_volatility ::~StochasticEuropeanCall_volatility () {}
 // Function to price a European call option with stochastic volatility
@@ -221,7 +221,7 @@ double StochasticEuropeanCall_volatility ::price(int num_simulations) {
             v_t = getV0();
             for (int j = 0; j < getn(); j++) {
                 S_t = S_t * exp((getR() - 0.5 * v_t) * getdt() + sqrt(v_t) * gaussian_box_muller());
-                v_t = v_t + getK() * (getTheta() - v_t) * getdt() + getSigma() * gaussian_box_muller();
+                v_t = v_t + getk() * (getTheta() - v_t) * getdt() + getSigma() * gaussian_box_muller();
             }
             payoff = std::max(S_t - getK(), 0.0);
             sum += payoff;
@@ -250,7 +250,7 @@ double StochasticEuropeanPut_volatility ::price(int num_simulations) {
             v_t = getV0();
             for (int j = 0; j < getn(); j++) {
                 S_t = S_t * exp((getR() - 0.5 * v_t) * getdt() + sqrt(v_t) * gaussian_box_muller());
-                v_t = v_t + getK() * (getTheta() - v_t) * getdt() + getSigma() * gaussian_box_muller();
+                v_t = v_t + getk() * (getTheta() - v_t) * getdt() + getSigma() * gaussian_box_muller();
             }
             payoff = std::max(getK() - S_t, 0.0);
             sum += payoff;
@@ -277,7 +277,7 @@ double StochasticEuropeanCall_interest::price(int num_simulations) {
             r_t = getR();
             for (int j = 0; j < getn(); j++) {
                 S_t = S_t * exp((getR() - 0.5 * getV0()) * getdt() + sqrt(getV0()) * gaussian_box_muller());
-                r_t = r_t + getK() * (getTheta() - r_t) * getdt() + getSigma() * gaussian_box_muller();
+                r_t = r_t + getk() * (getTheta() - r_t) * getdt() + getSigma() * gaussian_box_muller();
             }
             payoff = std::max(S_t - getK(), 0.0);
             sum += payoff;
@@ -306,7 +306,7 @@ double StochasticEuropeanPut_interest ::price(int num_simulations) {
             r_t = getR();
             for (int j = 0; j < getn(); j++) {
                 S_t = S_t * exp((getR() - 0.5 * getV0()) * getdt() + sqrt(getV0()) * gaussian_box_muller());
-                r_t = r_t + getK() * (getTheta() - r_t) * getdt() + getSigma() * gaussian_box_muller();
+                r_t = r_t + getk() * (getTheta() - r_t) * getdt() + getSigma() * gaussian_box_muller();
             }
             payoff = std::max(getK() - S_t, 0.0);
             sum += payoff;
