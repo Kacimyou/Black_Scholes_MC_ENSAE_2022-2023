@@ -51,10 +51,10 @@ public:
     // Calculate d1 and d2
     double d1();
     double d2();
-
-
+    
+    
     // The Greeks
-
+    
     // Function to calculate the delta of the option
     double delta();
     // Function to calculate the gamma of the option
@@ -81,17 +81,17 @@ public:
 
     // Price a European call option using BS formula
     double price();
-
+    
     // Price a European put option using Monte Carlo simulation
-    double price_MonteCarlo(int);
+    double price_MonteCarlo(int,int);
 
     //Price difference between the BS price and the Monte Carlo one for n simulations
-    double difference(int);
+    double difference(int,int);
 
 
     // Replication strategy
     void replicate();
-
+    
     };
 
 //**********************************
@@ -106,12 +106,12 @@ public:
 
     // Price a European put option using BS formula
     double price();
-
+    
     // Price a European put option using Monte Carlo simulation
-    double price_MonteCarlo(int);
-
+    double price_MonteCarlo(int,int);
+    
     //Price difference between the BS price and the Monte Carlo one for n simulations
-    double difference(int);
+    double difference(int,int);
 
     // Replication strategy
     void replicate();
@@ -166,60 +166,48 @@ public:
 class StochasticEuropeanCall_volatility : public StochasticEuropeanOption
 {
 public:
-    // Constructor
-    StochasticEuropeanCall_volatility (double S, double K, double r, double v0, double k, double theta, double rho, double sigma, double T);
-        ~StochasticEuropeanCall_volatility ();
-
-
-    // Function to price a European call option with stochastic volatility
-    double price(int num_simulations);
+// Constructor
+StochasticEuropeanCall_volatility (double S, double K, double r, double v0, double k, double theta, double rho, double sigma, double T);
+~StochasticEuropeanCall_volatility ();
+// Function to price a European call option with stochastic volatility
+double price(int num_simulations);
 };
-
 //**********************************
-//	European Put with Stochastic Interest rate
+// European Put with Stochastic Interest rate
 //**********************************
-
-class StochasticEuropeanPut_interest  : public StochasticEuropeanOption
+class StochasticEuropeanPut_interest : public StochasticEuropeanOption
 {
 public:
-    // Constructor
-    StochasticEuropeanPut_interest (double S, double K, double r, double v0, double k, double theta, double rho, double sigma, double T);
-        ~StochasticEuropeanPut_interest ();
-
-    // Function to price a European put option with stochastic interest rate
-    double price(int num_simulations);
+// Constructor
+StochasticEuropeanPut_interest (double S, double K, double r, double v0, double k, double theta, double rho, double sigma, double T);
+~StochasticEuropeanPut_interest ();
+// Function to price a European put option with stochastic interest rate
+double price(int num_simulations);
 };
-
 //**********************************
-//	European Call with Stochastic Interest
+// European Call with Stochastic Interest
 //**********************************
-
 
 class StochasticEuropeanCall_interest : public StochasticEuropeanOption
 {
 public:
-    // Constructor
-    StochasticEuropeanCall_interest (double S, double K, double r, double v0, double k, double theta, double rho, double sigma, double T);
-        ~StochasticEuropeanCall_interest ();
-
-
-    // Function to price a European call option with stochastic interest rate
-    double price(int num_simulations);
+// Constructor
+StochasticEuropeanCall_interest (double S, double K, double r, double v0, double k, double theta, double rho, double sigma, double T);
+~StochasticEuropeanCall_interest ();
+// Function to price a European call option with stochastic interest rate
+double price(int num_simulations);
 };
-
 //**********************************
-//	European Put with Stochastic Volatility
+// European Put with Stochastic Volatility
 //**********************************
-
-class StochasticEuropeanPut_volatility  : public StochasticEuropeanOption
+class StochasticEuropeanPut_volatility : public StochasticEuropeanOption
 {
 public:
-    // Constructor
-    StochasticEuropeanPut_volatility (double S, double K, double r, double v0, double k, double theta, double rho, double sigma, double T);
-        ~StochasticEuropeanPut_volatility ();
-
-    // Function to price a European put option with stochastic volatility
-    double price(int num_simulations);
+// Constructor
+StochasticEuropeanPut_volatility (double S, double K, double r, double v0, double k, double theta, double rho, double sigma, double T);
+~StochasticEuropeanPut_volatility ();
+// Function to price a European put option with stochastic volatility
+double price(int num_simulations);
 };
 
 //**********************************
@@ -389,7 +377,7 @@ public:
 //**********************************
 //**********************************
 
-// A gap call option is a European call option that pays off S_t-K1 when S_t>K2.
+// A gap call option is a European call option that pays off S_t-K1 when S_t>K2. 
 //Its price is the price of a European Call priced using BS formula + (K2-K1)*exp (-r*T)*N(d2)
 
 
@@ -426,19 +414,19 @@ public:
     //Getter methods
     double getK1();
     };
-
+    
 //**********************************
 //**********************************
 //	Chooser Option
 //**********************************
 //**********************************
-
+    
 //The option allows to decide, at a predefined time T1, whether to exercice a call or a put
-
+    
 class ChooserOption : public Option
 {
 private:
-    double T1;
+    double T1; 
 public:
     // Constructor
     ChooserOption(double S, double K, double r, double sigma, double T,double T1);
@@ -486,7 +474,7 @@ public:
 //**********************************
 class BarrierCall: public BarrierOption
 {private:
-int type_call_1; // type_call_1=1 if the option is UP-and- and
+int type_call_1; // type_call_1=1 if the option is UP-and- and 
 //type_call_1=0 if the option is DOWN-and-
 
 public:
@@ -497,7 +485,7 @@ BarrierCall(double S, double K, double r, double sigma, double T, double n, int 
 //Function to price Barrier Call Option using Monte Carlo simulation
 double price(int num_simulations);
 
-//Getter methods
+//Getter methods 
 int getType1();
 
 };
@@ -507,7 +495,7 @@ int getType1();
 //**********************************
 class BarrierPut: public BarrierOption
 {private:
-int type_put_1; // type_put_1=1 if the option is UP-and- and
+int type_put_1; // type_put_1=1 if the option is UP-and- and 
 //type_put_1=0 if the option is DOWN-and-
 
 public:
@@ -518,7 +506,8 @@ BarrierPut(double S, double K, double r, double sigma, double T, double n, int t
 //Function to price Barrier Put Option using Monte Carlo simulation
 double price(int num_simulations);
 
-//Getter methods
+//Getter methods 
 int getType1();
 
 };
+
