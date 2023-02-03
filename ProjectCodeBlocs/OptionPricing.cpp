@@ -19,12 +19,12 @@ std::normal_distribution<double> distribution(0.0,1.0);
 
 double PI=3.14159265359;
 //Box-Muller algorithm to generate random gaussian numbers
-double gaussian_box_muller()
+double gaussian_box_muller() 
 {
   double U1=((double)rand()/(double)RAND_MAX);
   double U2=((double)rand()/(double)RAND_MAX);
   double n=sqrt(-2*log(U1))*cos(2*U2*PI);
-
+  
 
   return n;};
 
@@ -102,7 +102,7 @@ double EuropeanCall::price() { return getS() * norm_cdf(d1()) - getK() * exp(-ge
 
 //Price a European call option by Monte Carlo Simulation
 
-double EuropeanCall::price_MonteCarlo(int num_simulations) {
+double EuropeanCall::price_MonteCarlo(int num_simulations,int n) {
         double sum = 0;
         double S_t;
         double payoff;
@@ -110,8 +110,8 @@ double EuropeanCall::price_MonteCarlo(int num_simulations) {
             S_t = getS();
 
             for (int j = 0; j < 12; j++) {
-                S_t = S_t * exp((getR() - 0.5 * getSigma() * getSigma()) * (getT()/12) + getSigma() * sqrt(getT()/12) * gaussian_box_muller());
-
+            S_t = S_t * exp((getR() - 0.5 * getSigma()* getSigma())* getT()/n + getSigma() * sqrt(getT()/n) * gaussian_box_muller());
+                
             }
             payoff = std::max(S_t - getK(), 0.0);
             sum += payoff;
@@ -119,16 +119,17 @@ double EuropeanCall::price_MonteCarlo(int num_simulations) {
         return (sum / num_simulations) * exp(-getR() * getT());
     }
 
-double EuropeanCall::difference(int num_simulations){
-
-    return abs(price()-price_MonteCarlo(num_simulations));};
+double EuropeanCall::difference(int num_simulations,int n){
+   
+    return abs(price()-price_MonteCarlo(num_simulations,n));};
 
 
 // Replication strategy
 void EuropeanCall::replicate() {
     double num_shares = norm_cdf(d1()); // Number of shares of the underlying asset
     double num_bonds = exp(-getR() * getT()) * norm_cdf(d2()); // Number of risk-free bonds
-    std::cout << "To replicate a European call option, hold " << num_shares << " shares of the underlying asset and " << num_bonds << " risk-free bonds." << std::endl;
+    std::cout <<"To replicate a European call option, hold "<< num_shares << " shares of the underlying"<<std::endl<<"asset and "
+    << num_bonds << " risk-free bonds." << std::endl;
     }
 
 
@@ -139,24 +140,24 @@ void EuropeanCall::replicate() {
 // Constructor
 EuropeanPut::EuropeanPut(double S, double K, double r, double sigma, double T) :
         Option(S, K, r, sigma, T) {}
-
+        
 EuropeanPut::~EuropeanPut() {}
 // Price a European put option
 double EuropeanPut::price() { return getK() * exp(-getR() * getT()) * norm_cdf(-d2()) - getS() * norm_cdf(-d1()); }
 
 //Price a European call option by Monte Carlo Simulation
 
-double EuropeanPut::price_MonteCarlo(int num_simulations) {
+double EuropeanPut::price_MonteCarlo(int num_simulations,int n) {
         double sum = 0;
         double S_t;
-
+        
         double payoff;
         for (int i = 0; i < num_simulations; i++) {
             S_t = getS();
-
-            for (int j = 0; j < 12; j++) {
-                S_t = S_t * exp((getR() - 0.5 * getSigma() * getSigma()) * (getT()/12) + getSigma() * sqrt(getT()/12) * gaussian_box_muller());
-
+            
+        for (int j = 0; j < 12; j++) {
+            S_t = S_t * exp((getR()-0.5 * getSigma() * getSigma()) *getT()/n + getSigma()* sqrt(getT()/n) *gaussian_box_muller());
+                
             }
             payoff = std::max(-S_t + getK(), 0.0);
             sum += payoff;
@@ -164,8 +165,8 @@ double EuropeanPut::price_MonteCarlo(int num_simulations) {
         return (sum / num_simulations) * exp(-getR() * getT());
     }
 
-double EuropeanPut::difference(int num_simulations){
-    return abs(price()-price_MonteCarlo(num_simulations));};
+double EuropeanPut::difference(int num_simulations,int n){
+    return abs(price()-price_MonteCarlo(num_simulations,n));};
 
 
 
@@ -186,7 +187,7 @@ StochasticEuropeanOption::StochasticEuropeanOption(double S, double K, double r,
 StochasticEuropeanOption::~StochasticEuropeanOption() {}
 // Getter methods
 double StochasticEuropeanOption::getV0() { return v0; }
-double StochasticEuropeanOption::getk() { return k; }
+double StochasticEuropeanOption::getK() { return k; }
 double StochasticEuropeanOption::getTheta() { return theta; }
 double StochasticEuropeanOption::getRho() { return rho; }
 double StochasticEuropeanOption::getSigma() { return sigma; }
@@ -195,7 +196,7 @@ double StochasticEuropeanOption::getdt() { return dt; }
 
 // Setter methods
 void StochasticEuropeanOption::setV0(double v0) { this->v0 = v0; }
-void StochasticEuropeanOption::setk(double k) { this->k = k; }
+void StochasticEuropeanOption::setK(double k) { this->k = k; }
 void StochasticEuropeanOption::setTheta(double theta) { this->theta = theta; }
 void StochasticEuropeanOption::setRho(double rho) { this->rho = rho; }
 void StochasticEuropeanOption::setSigma(double sigma) { this->sigma = sigma; }
@@ -207,11 +208,11 @@ void StochasticEuropeanOption::setn(double n) { this->n = n; }
 //**********************************
 
 // Constructor
-StochasticEuropeanCall_volatility ::StochasticEuropeanCall_volatility (double S,WS double K, double r, double v0, double k, double theta, double rho, double sigma, double T) :
+StochasticEuropeanCall::StochasticEuropeanCall(double S, double K, double r, double v0, double k, double theta, double rho, double sigma, double T) :
     StochasticEuropeanOption(S, K, r, v0, k, theta, rho, sigma, T) {}
-StochasticEuropeanCall_volatility ::~StochasticEuropeanCall_volatility () {}
+StochasticEuropeanCall::~StochasticEuropeanCall() {}
 // Function to price a European call option with stochastic volatility
-double StochasticEuropeanCall_volatility ::price(int num_simulations) {
+double StochasticEuropeanCall::price(int num_simulations) {
         double sum = 0;
         double S_t;
         double v_t;
@@ -221,7 +222,7 @@ double StochasticEuropeanCall_volatility ::price(int num_simulations) {
             v_t = getV0();
             for (int j = 0; j < getn(); j++) {
                 S_t = S_t * exp((getR() - 0.5 * v_t) * getdt() + sqrt(v_t) * gaussian_box_muller());
-                v_t = v_t + getk() * (getTheta() - v_t) * getdt() + getSigma() * gaussian_box_muller();
+                v_t = v_t + getK() * (getTheta() - v_t) * getdt() + getSigma() * gaussian_box_muller();
             }
             payoff = std::max(S_t - getK(), 0.0);
             sum += payoff;
@@ -234,13 +235,13 @@ double StochasticEuropeanCall_volatility ::price(int num_simulations) {
 //**********************************
 
 // Constructor
-StochasticEuropeanPut_volatility ::StochasticEuropeanPut_volatility (double S, double K, double r, double v0, double k, double theta, double rho, double sigma, double T) :
+StochasticEuropeanPut::StochasticEuropeanPut(double S, double K, double r, double v0, double k, double theta, double rho, double sigma, double T) :
     StochasticEuropeanOption(S, K, r, v0, k, theta, rho, sigma, T) {}
 
-StochasticEuropeanPut_volatility ::~StochasticEuropeanPut_volatility () {}
+StochasticEuropeanPut::~StochasticEuropeanPut() {}
 
 // Function to price a European put option with stochastic volatility
-double StochasticEuropeanPut_volatility ::price(int num_simulations) {
+double StochasticEuropeanPut::price(int num_simulations) {
         double sum = 0;
         double S_t;
         double v_t;
@@ -250,7 +251,7 @@ double StochasticEuropeanPut_volatility ::price(int num_simulations) {
             v_t = getV0();
             for (int j = 0; j < getn(); j++) {
                 S_t = S_t * exp((getR() - 0.5 * v_t) * getdt() + sqrt(v_t) * gaussian_box_muller());
-                v_t = v_t + getk() * (getTheta() - v_t) * getdt() + getSigma() * gaussian_box_muller();
+                v_t = v_t + getK() * (getTheta() - v_t) * getdt() + getSigma() * gaussian_box_muller();
             }
             payoff = std::max(getK() - S_t, 0.0);
             sum += payoff;
@@ -258,61 +259,6 @@ double StochasticEuropeanPut_volatility ::price(int num_simulations) {
         return (sum / num_simulations) * exp(-getR() * getT());
     }
 
-//**********************************
-//	European Call with Stochastic Interest rate
-//**********************************
-
-// Constructor
-StochasticEuropeanCall_interest::StochasticEuropeanCall_interest (double S, double K, double r, double v0, double k, double theta, double rho, double sigma, double T) :
-    StochasticEuropeanOption(S, K, r, v0, k, theta, rho, sigma, T) {}
-StochasticEuropeanCall_interest ::~StochasticEuropeanCall_interest () {}
-// Function to price a European call option with stochastic interest rate
-double StochasticEuropeanCall_interest::price(int num_simulations) {
-        double sum = 0;
-        double S_t;
-        double r_t;
-        double payoff;
-        for (int i = 0; i < num_simulations; i++) {
-            S_t = getS();
-            r_t = getR();
-            for (int j = 0; j < getn(); j++) {
-                S_t = S_t * exp((getR() - 0.5 * getV0()) * getdt() + sqrt(getV0()) * gaussian_box_muller());
-                r_t = r_t + getk() * (getTheta() - r_t) * getdt() + getSigma() * gaussian_box_muller();
-            }
-            payoff = std::max(S_t - getK(), 0.0);
-            sum += payoff;
-        }
-        return (sum / num_simulations) * exp(-getR() * getT());
-    }
-
-//**********************************
-//	European Put with Stochastic Interest rate
-//**********************************
-
-// Constructor
-StochasticEuropeanPut_interest::StochasticEuropeanPut_interest (double S, double K, double r, double v0, double k, double theta, double rho, double sigma, double T) :
-    StochasticEuropeanOption(S, K, r, v0, k, theta, rho, sigma, T) {}
-
-StochasticEuropeanPut_interest ::~StochasticEuropeanPut_interest () {}
-
-// Function to price a European put option with stochastic interest rate
-double StochasticEuropeanPut_interest ::price(int num_simulations) {
-        double sum = 0;
-        double S_t;
-        double r_t;
-        double payoff;
-        for (int i = 0; i < num_simulations; i++) {
-            S_t = getS();
-            r_t = getR();
-            for (int j = 0; j < getn(); j++) {
-                S_t = S_t * exp((getR() - 0.5 * getV0()) * getdt() + sqrt(getV0()) * gaussian_box_muller());
-                r_t = r_t + getk() * (getTheta() - r_t) * getdt() + getSigma() * gaussian_box_muller();
-            }
-            payoff = std::max(getK() - S_t, 0.0);
-            sum += payoff;
-        }
-        return (sum / num_simulations) * exp(-getR() * getT());
-    }
 
 
 //**********************************
@@ -461,7 +407,7 @@ double LookbackCall::price(int num_simulations) {
         }
         return (sum / num_simulations) * exp(-getR() * getT());
     }
-
+    
 //**********************************
 //**********************************
 //	Binary Option
@@ -503,19 +449,19 @@ BinaryCall::~BinaryCall() {}
 // Function to price an Binary call option using Monte Carlo methods
 double BinaryCall::price(int num_simulations) {
     double sum = 0;
-    double S_t;
+    double S_t; 
     double payoff;
     for (int i = 0; i < num_simulations; i++) {
         S_t = getS();
         for (int j = 0; j < 12; j++) {
             S_t = S_t * exp((getR()-0.5 *getSigma() * getSigma())* getT()/12+getSigma()*sqrt(getT()/12) * gaussian_box_muller());
             }
-
+        
             payoff = heaviside(S_t - getK());
             sum += payoff;
         }
         return (sum / num_simulations) * exp(-getR() * getT());
-    }
+    } 
 
 
 //**********************************
@@ -530,14 +476,14 @@ BinaryPut::~BinaryPut() {}
 // Function to price an Binary call option using Monte Carlo methods
 double BinaryPut::price(int num_simulations) {
         double sum = 0;
-        double S_t;
+        double S_t; 
         double payoff;
         for (int i = 0; i < num_simulations; i++) {
             S_t = getS();
-
+            
             for (int j = 0; j < 12; j++) {
                 S_t = S_t * exp((getR() - 0.5 * getSigma() * getSigma()) * getT()/12 + getSigma() * sqrt(getT()/12) * gaussian_box_muller());
-
+                
             }
             payoff = heaviside(-S_t + getK());
             sum += payoff;
@@ -558,15 +504,15 @@ double BinaryPut::price(int num_simulations) {
 //**********************************
 
 // Constructor
-GapCall::GapCall(double S, double K, double r, double sigma, double T, double K1) :
-    Option(S, K, r, sigma, T), K1(K1) {}
+GapCall::GapCall(double S, double K, double r, double sigma, double T, double K1_2) :
+    Option(S, K, r, sigma, T), K1(K1_2) {}
 GapCall::~GapCall() {}
 
 //Getter methods
 double GapCall::getK1(){return K1;};
 
 //Function to price a Gap Call option
-double GapCall::price()
+double GapCall::price() 
 {return getS() * norm_cdf(d1()) - getK() * exp(-getR() * getT()) * norm_cdf(d2())+(getK()-getK1())*norm_cdf(d2()); };
 
 
@@ -575,8 +521,8 @@ double GapCall::price()
 //**********************************
 
 // Constructor
-GapPut::GapPut(double S, double K, double r, double sigma, double T, double K1) :
-    Option(S, K, r, sigma, T), K1(K1) {}
+GapPut::GapPut(double S, double K, double r, double sigma, double T, double K1_2) :
+    Option(S, K, r, sigma, T), K1(K1_2) {}
 GapPut::~GapPut() {}
 
 //Getter methods
@@ -594,8 +540,8 @@ double GapPut::price() { return getK1()*exp(-getR()*getT())*norm_cdf(-d2())-getS
 
 
 // Constructor
-ChooserOption::ChooserOption(double S, double K, double r, double sigma, double T, double T1) :
-    Option(S, K, r, sigma, T), T1(T1) {}
+ChooserOption::ChooserOption(double S, double K, double r, double sigma, double T, double T12) :
+    Option(S, K, r, sigma, T), T1(T12) {}
 ChooserOption::~ChooserOption() {}
 
 // Getter methods
@@ -619,7 +565,7 @@ double ChooserOption::price()
 
 BarrierOption::BarrierOption(double S, double K, double r, double sigma, double T, double n, int typ, double barrie) :
     Option(S, K, r, sigma, T), n(n), type(typ), barrier(barrie) {dt=T/n;};
-
+   
 BarrierOption::~BarrierOption() {}
 // Getter methods
 double BarrierOption::getn() {return n;}
@@ -656,7 +602,7 @@ else {double sum=0;
         int kick=0;
         for (int i = 0; i < num_simulations; i++) {
             S_t = getS();
-
+            
             for (int j = 0; j < getn(); j++) {
                 S_t = S_t * exp((getR() - 0.5 * getSigma() * getSigma()) * getdt() + getSigma() * gaussian_box_muller());
                 if (S_t>getbarrier()){kick+=1;}
@@ -677,7 +623,7 @@ else {double sum=0;
         int kick=0;
         for (int i = 0; i < num_simulations; i++) {
             S_t = getS();
-
+            
             for (int j = 0; j < getn(); j++) {
                 S_t = S_t * exp((getR() - 0.5 * getSigma() * getSigma()) * getdt() + getSigma() * gaussian_box_muller());
                 if (S_t<getbarrier()){kick+=1;}
@@ -688,7 +634,7 @@ else {double sum=0;
         }
         return (sum / num_simulations) * exp(-getR() * getT());
     }}
-
+    
 if ((getType()==0)&&(getType1()==0)) // The call is down-and-out
 {if (getbarrier()>getS()) {std::cout<<"Wrong parameters ";
     return -1;
@@ -699,7 +645,7 @@ else {double sum=0;
         int kick=0;
         for (int i = 0; i < num_simulations; i++) {
             S_t = getS();
-
+            
             for (int j = 0; j < getn(); j++) {
                 S_t = S_t * exp((getR() - 0.5 * getSigma() * getSigma()) * getdt() + getSigma() * gaussian_box_muller());
                 if (S_t<getbarrier()){kick+=1;}
@@ -721,7 +667,7 @@ else {double sum=0;
         int kick=0;
         for (int i = 0; i < num_simulations; i++) {
             S_t = getS();
-
+            
             for (int j = 0; j < getn(); j++) {
                 S_t = S_t * exp((getR() - 0.5 * getSigma() * getSigma()) * getdt() + getSigma() * gaussian_box_muller());
                 if (S_t>getbarrier()){kick+=1;}
@@ -731,11 +677,11 @@ else {double sum=0;
             sum += payoff;
         }
         return (sum / num_simulations) * exp(-getR() * getT());
-
+        
     }}
     return -1;
 };
-
+    
 
 
 //**********************************
@@ -765,7 +711,7 @@ else {double sum=0;
         int kick=0;
         for (int i = 0; i < num_simulations; i++) {
             S_t = getS();
-
+            
             for (int j = 0; j < getn(); j++) {
                 S_t = S_t * exp((getR() - 0.5 * getSigma() * getSigma()) * getdt() + getSigma() * gaussian_box_muller());
                 if (S_t>getbarrier()){kick+=1;}
@@ -786,7 +732,7 @@ else {double sum=0;
         int kick=0;
         for (int i = 0; i < num_simulations; i++) {
             S_t = getS();
-
+            
             for (int j = 0; j < getn(); j++) {
                 S_t = S_t * exp((getR() - 0.5 * getSigma() * getSigma()) * getdt() + getSigma() * gaussian_box_muller());
                 if (S_t<getbarrier()){kick+=1;}
@@ -797,7 +743,7 @@ else {double sum=0;
         }
         return (sum / num_simulations) * exp(-getR() * getT());
     }}
-
+    
 if ((getType()==0)&&(getType1()==0)) // The put is down-and-out
 {if (getbarrier()>getS()) {std::cout<<"Wrong parameters ";
     return -1;
@@ -808,7 +754,7 @@ else {double sum=0;
         int kick=0;
         for (int i = 0; i < num_simulations; i++) {
             S_t = getS();
-
+            
             for (int j = 0; j < getn(); j++) {
                 S_t = S_t * exp((getR() - 0.5 * getSigma() * getSigma()) * getdt() + getSigma() * gaussian_box_muller());
                 if (S_t<getbarrier()){kick+=1;}
@@ -830,7 +776,7 @@ else {double sum=0;
         int kick=0;
         for (int i = 0; i < num_simulations; i++) {
             S_t = getS();
-
+            
             for (int j = 0; j < getn(); j++) {
                 S_t = S_t * exp((getR() - 0.5 * getSigma() * getSigma()) * getdt() + getSigma() * gaussian_box_muller());
                 if (S_t>getbarrier()){kick+=1;}
