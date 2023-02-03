@@ -102,7 +102,7 @@ double EuropeanCall::price() { return getS() * norm_cdf(d1()) - getK() * exp(-ge
 
 //Price a European call option by Monte Carlo Simulation
 
-double EuropeanCall::price_MonteCarlo(int num_simulations) {
+double EuropeanCall::price_MonteCarlo(int num_simulations,int n) {
         double sum = 0;
         double S_t;
         double payoff;
@@ -110,7 +110,7 @@ double EuropeanCall::price_MonteCarlo(int num_simulations) {
             S_t = getS();
 
             for (int j = 0; j < 12; j++) {
-                S_t = S_t * exp((getR() - 0.5 * getSigma() * getSigma()) * getT()/12 + getSigma() * sqrt(getT()/12) * gaussian_box_muller());
+            S_t = S_t * exp((getR() - 0.5 * getSigma()* getSigma())* getT()/n + getSigma() * sqrt(getT()/n) * gaussian_box_muller());
                 
             }
             payoff = std::max(S_t - getK(), 0.0);
@@ -119,16 +119,17 @@ double EuropeanCall::price_MonteCarlo(int num_simulations) {
         return (sum / num_simulations) * exp(-getR() * getT());
     }
 
-double EuropeanCall::difference(int num_simulations){
+double EuropeanCall::difference(int num_simulations,int n){
    
-    return abs(price()-price_MonteCarlo(num_simulations));};
+    return abs(price()-price_MonteCarlo(num_simulations,n));};
 
 
 // Replication strategy
 void EuropeanCall::replicate() {
     double num_shares = norm_cdf(d1()); // Number of shares of the underlying asset
     double num_bonds = exp(-getR() * getT()) * norm_cdf(d2()); // Number of risk-free bonds
-    std::cout << "To replicate a European call option, hold " << num_shares << " shares of the underlying asset and " << num_bonds << " risk-free bonds." << std::endl;
+    std::cout <<"To replicate a European call option, hold "<< num_shares << " shares of the underlying"<<std::endl<<"asset and "
+    << num_bonds << " risk-free bonds." << std::endl;
     }
 
 
@@ -146,7 +147,7 @@ double EuropeanPut::price() { return getK() * exp(-getR() * getT()) * norm_cdf(-
 
 //Price a European call option by Monte Carlo Simulation
 
-double EuropeanPut::price_MonteCarlo(int num_simulations) {
+double EuropeanPut::price_MonteCarlo(int num_simulations,int n) {
         double sum = 0;
         double S_t;
         
@@ -154,8 +155,8 @@ double EuropeanPut::price_MonteCarlo(int num_simulations) {
         for (int i = 0; i < num_simulations; i++) {
             S_t = getS();
             
-            for (int j = 0; j < 12; j++) {
-                S_t = S_t * exp((getR() - 0.5 * getSigma() * getSigma()) * getT()/12 + getSigma() * sqrt(getT()/12) * gaussian_box_muller());
+        for (int j = 0; j < 12; j++) {
+            S_t = S_t * exp((getR()-0.5 * getSigma() * getSigma()) *getT()/n + getSigma()* sqrt(getT()/n) *gaussian_box_muller());
                 
             }
             payoff = std::max(-S_t + getK(), 0.0);
@@ -164,8 +165,8 @@ double EuropeanPut::price_MonteCarlo(int num_simulations) {
         return (sum / num_simulations) * exp(-getR() * getT());
     }
 
-double EuropeanPut::difference(int num_simulations){
-    return abs(price()-price_MonteCarlo(num_simulations));};
+double EuropeanPut::difference(int num_simulations,int n){
+    return abs(price()-price_MonteCarlo(num_simulations,n));};
 
 
 
@@ -503,8 +504,8 @@ double BinaryPut::price(int num_simulations) {
 //**********************************
 
 // Constructor
-GapCall::GapCall(double S, double K, double r, double sigma, double T, double K1) :
-    Option(S, K, r, sigma, T) {}
+GapCall::GapCall(double S, double K, double r, double sigma, double T, double K1_2) :
+    Option(S, K, r, sigma, T), K1(K1_2) {}
 GapCall::~GapCall() {}
 
 //Getter methods
@@ -520,8 +521,8 @@ double GapCall::price()
 //**********************************
 
 // Constructor
-GapPut::GapPut(double S, double K, double r, double sigma, double T, double K1) :
-    Option(S, K, r, sigma, T) {}
+GapPut::GapPut(double S, double K, double r, double sigma, double T, double K1_2) :
+    Option(S, K, r, sigma, T), K1(K1_2) {}
 GapPut::~GapPut() {}
 
 //Getter methods
@@ -539,8 +540,8 @@ double GapPut::price() { return getK1()*exp(-getR()*getT())*norm_cdf(-d2())-getS
 
 
 // Constructor
-ChooserOption::ChooserOption(double S, double K, double r, double sigma, double T, double T1) :
-    Option(S, K, r, sigma, T) {}
+ChooserOption::ChooserOption(double S, double K, double r, double sigma, double T, double T12) :
+    Option(S, K, r, sigma, T), T1(T12) {}
 ChooserOption::~ChooserOption() {}
 
 // Getter methods
