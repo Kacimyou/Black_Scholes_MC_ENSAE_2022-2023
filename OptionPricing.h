@@ -83,10 +83,10 @@ public:
     double price();
     
     // Price a European put option using Monte Carlo simulation
-    double price_MonteCarlo(int);
+    double price_MonteCarlo(int,int);
 
     //Price difference between the BS price and the Monte Carlo one for n simulations
-    double difference(int);
+    double difference(int,int);
 
 
     // Replication strategy
@@ -108,10 +108,10 @@ public:
     double price();
     
     // Price a European put option using Monte Carlo simulation
-    double price_MonteCarlo(int);
+    double price_MonteCarlo(int,int);
     
     //Price difference between the BS price and the Monte Carlo one for n simulations
-    double difference(int);
+    double difference(int,int);
 
     // Replication strategy
     void replicate();
@@ -143,7 +143,7 @@ public:
 
     // Getter methods
     double getV0();
-    double getK();
+    double getk();
     double getTheta();
     double getRho();
     double getSigma();
@@ -151,7 +151,7 @@ public:
     double getdt();
     // Setter methods
     void setV0(double v0);
-    void setK(double k);
+    void setk(double k);
     void setTheta(double theta) ;
     void setRho(double rho);
     void setSigma(double sigma);
@@ -163,33 +163,52 @@ public:
 //**********************************
 
 
-class StochasticEuropeanCall : public StochasticEuropeanOption
+class StochasticEuropeanCall_volatility : public StochasticEuropeanOption
 {
 public:
-    // Constructor
-    StochasticEuropeanCall(double S, double K, double r, double v0, double k, double theta, double rho, double sigma, double T);
-        ~StochasticEuropeanCall();
-
-
-    // Function to price a European call option with stochastic volatility
-    double price(int num_simulations);
+// Constructor
+StochasticEuropeanCall_volatility (double S, double K, double r, double v0, double k, double theta, double rho, double sigma, double T);
+~StochasticEuropeanCall_volatility ();
+// Function to price a European call option with stochastic volatility
+double price(int num_simulations);
 };
-
 //**********************************
-//	European Put with Stochastic Volatility
+// European Put with Stochastic Interest rate
 //**********************************
-
-class StochasticEuropeanPut : public StochasticEuropeanOption
+class StochasticEuropeanPut_interest : public StochasticEuropeanOption
 {
 public:
-    // Constructor
-    StochasticEuropeanPut(double S, double K, double r, double v0, double k, double theta, double rho, double sigma, double T);
-        ~StochasticEuropeanPut();
-
-    // Function to price a European put option with stochastic volatility
-    double price(int num_simulations);
+// Constructor
+StochasticEuropeanPut_interest (double S, double K, double r, double v0, double k, double theta, double rho, double sigma, double T);
+~StochasticEuropeanPut_interest ();
+// Function to price a European put option with stochastic interest rate
+double price(int num_simulations);
 };
+//**********************************
+// European Call with Stochastic Interest
+//**********************************
 
+class StochasticEuropeanCall_interest : public StochasticEuropeanOption
+{
+public:
+// Constructor
+StochasticEuropeanCall_interest (double S, double K, double r, double v0, double k, double theta, double rho, double sigma, double T);
+~StochasticEuropeanCall_interest ();
+// Function to price a European call option with stochastic interest rate
+double price(int num_simulations);
+};
+//**********************************
+// European Put with Stochastic Volatility
+//**********************************
+class StochasticEuropeanPut_volatility : public StochasticEuropeanOption
+{
+public:
+// Constructor
+StochasticEuropeanPut_volatility (double S, double K, double r, double v0, double k, double theta, double rho, double sigma, double T);
+~StochasticEuropeanPut_volatility ();
+// Function to price a European put option with stochastic volatility
+double price(int num_simulations);
+};
 
 //**********************************
 //**********************************
@@ -491,3 +510,4 @@ double price(int num_simulations);
 int getType1();
 
 };
+

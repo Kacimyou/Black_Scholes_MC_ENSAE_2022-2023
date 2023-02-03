@@ -187,7 +187,7 @@ StochasticEuropeanOption::StochasticEuropeanOption(double S, double K, double r,
 StochasticEuropeanOption::~StochasticEuropeanOption() {}
 // Getter methods
 double StochasticEuropeanOption::getV0() { return v0; }
-double StochasticEuropeanOption::getK() { return k; }
+double StochasticEuropeanOption::getk() { return k; }
 double StochasticEuropeanOption::getTheta() { return theta; }
 double StochasticEuropeanOption::getRho() { return rho; }
 double StochasticEuropeanOption::getSigma() { return sigma; }
@@ -196,7 +196,7 @@ double StochasticEuropeanOption::getdt() { return dt; }
 
 // Setter methods
 void StochasticEuropeanOption::setV0(double v0) { this->v0 = v0; }
-void StochasticEuropeanOption::setK(double k) { this->k = k; }
+void StochasticEuropeanOption::setk(double k) { this->k = k; }
 void StochasticEuropeanOption::setTheta(double theta) { this->theta = theta; }
 void StochasticEuropeanOption::setRho(double rho) { this->rho = rho; }
 void StochasticEuropeanOption::setSigma(double sigma) { this->sigma = sigma; }
@@ -208,11 +208,11 @@ void StochasticEuropeanOption::setn(double n) { this->n = n; }
 //**********************************
 
 // Constructor
-StochasticEuropeanCall::StochasticEuropeanCall(double S, double K, double r, double v0, double k, double theta, double rho, double sigma, double T) :
+StochasticEuropeanCall_volatility::StochasticEuropeanCall_volatility(double S, double K, double r, double v0, double k, double theta, double rho, double sigma, double T) :
     StochasticEuropeanOption(S, K, r, v0, k, theta, rho, sigma, T) {}
-StochasticEuropeanCall::~StochasticEuropeanCall() {}
+StochasticEuropeanCall_volatility::~StochasticEuropeanCall_volatility() {}
 // Function to price a European call option with stochastic volatility
-double StochasticEuropeanCall::price(int num_simulations) {
+double StochasticEuropeanCall_volatility::price(int num_simulations) {
         double sum = 0;
         double S_t;
         double v_t;
@@ -222,7 +222,7 @@ double StochasticEuropeanCall::price(int num_simulations) {
             v_t = getV0();
             for (int j = 0; j < getn(); j++) {
                 S_t = S_t * exp((getR() - 0.5 * v_t) * getdt() + sqrt(v_t) * gaussian_box_muller());
-                v_t = v_t + getK() * (getTheta() - v_t) * getdt() + getSigma() * gaussian_box_muller();
+                v_t = v_t + getk() * (getTheta() - v_t) * getdt() + getSigma() * gaussian_box_muller();
             }
             payoff = std::max(S_t - getK(), 0.0);
             sum += payoff;
@@ -235,13 +235,13 @@ double StochasticEuropeanCall::price(int num_simulations) {
 //**********************************
 
 // Constructor
-StochasticEuropeanPut::StochasticEuropeanPut(double S, double K, double r, double v0, double k, double theta, double rho, double sigma, double T) :
+StochasticEuropeanPut_volatility::StochasticEuropeanPut_volatility(double S, double K, double r, double v0, double k, double theta, double rho, double sigma, double T) :
     StochasticEuropeanOption(S, K, r, v0, k, theta, rho, sigma, T) {}
 
-StochasticEuropeanPut::~StochasticEuropeanPut() {}
+StochasticEuropeanPut_volatility::~StochasticEuropeanPut_volatility() {}
 
 // Function to price a European put option with stochastic volatility
-double StochasticEuropeanPut::price(int num_simulations) {
+double StochasticEuropeanPut_volatility::price(int num_simulations) {
         double sum = 0;
         double S_t;
         double v_t;
@@ -251,7 +251,7 @@ double StochasticEuropeanPut::price(int num_simulations) {
             v_t = getV0();
             for (int j = 0; j < getn(); j++) {
                 S_t = S_t * exp((getR() - 0.5 * v_t) * getdt() + sqrt(v_t) * gaussian_box_muller());
-                v_t = v_t + getK() * (getTheta() - v_t) * getdt() + getSigma() * gaussian_box_muller();
+                v_t = v_t + getk() * (getTheta() - v_t) * getdt() + getSigma() * gaussian_box_muller();
             }
             payoff = std::max(getK() - S_t, 0.0);
             sum += payoff;
@@ -260,6 +260,61 @@ double StochasticEuropeanPut::price(int num_simulations) {
     }
 
 
+//**********************************​
+// European Call with Stochastic Interest rate
+//**********************************
+
+// Constructor
+StochasticEuropeanCall_interest::StochasticEuropeanCall_interest (double S, double K, double r, double v0, double k, double theta, double rho, double sigma, double T) :
+StochasticEuropeanOption(S, K, r, v0, k, theta, rho, sigma, T) {}
+StochasticEuropeanCall_interest ::~StochasticEuropeanCall_interest () {}
+// Function to price a European call option with stochastic interest rate
+double StochasticEuropeanCall_interest::price(int num_simulations) {
+double sum = 0;
+double S_t;
+double r_t;
+double payoff;
+for (int i = 0; i < num_simulations; i++) {
+S_t = getS();
+r_t = getR();
+for (int j = 0; j < getn(); j++) {
+S_t = S_t * exp((getR() - 0.5 * getV0()) * getdt() + sqrt(getV0()) * gaussian_box_muller());
+r_t = r_t + getk() * (getTheta() - r_t) * getdt() + getSigma() * gaussian_box_muller();
+}
+payoff = std::max(S_t - getK(), 0.0);
+sum += payoff;
+}
+return (sum / num_simulations) * exp(-getR() * getT());
+}
+
+//**********************************
+// European Put with Stochastic Interest rate
+//**********************************
+
+// Constructor
+StochasticEuropeanPut_interest::StochasticEuropeanPut_interest (double S, double K, double r, double v0, double k, double theta, double rho, double sigma, double T) :
+StochasticEuropeanOption(S, K, r, v0, k, theta, rho, sigma, T) {}
+
+StochasticEuropeanPut_interest ::~StochasticEuropeanPut_interest () {}
+
+// Function to price a European put option with stochastic interest rate
+double StochasticEuropeanPut_interest ::price(int num_simulations) {
+double sum = 0;
+double S_t;
+double r_t;
+double payoff;
+for (int i = 0; i < num_simulations; i++) {
+S_t = getS();
+r_t = getR();
+for (int j = 0; j < getn(); j++) {
+S_t = S_t * exp((getR() - 0.5 * getV0()) * getdt() + sqrt(getV0()) * gaussian_box_muller());
+r_t = r_t + getk() * (getTheta() - r_t) * getdt() + getSigma() * gaussian_box_muller();
+}
+payoff = std::max(getK() - S_t, 0.0);
+sum += payoff;
+}
+return (sum / num_simulations) * exp(-getR() * getT());
+}
 
 //**********************************
 //**********************************
@@ -513,7 +568,7 @@ double GapCall::getK1(){return K1;};
 
 //Function to price a Gap Call option
 double GapCall::price() 
-{return getS() * norm_cdf(d1()) - getK() * exp(-getR() * getT()) * norm_cdf(d2())+(getK()-getK1())*norm_cdf(d2()); };
+{return EuropeanCall(getS(),getK1(),getR(),getSigma(),getT()).price()+(getK1()-getK())*exp(-getR()*getT())*norm_cdf(d2());};
 
 
 //**********************************
